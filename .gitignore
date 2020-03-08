@@ -3,3 +3,8 @@
 ################################################################################
 
 /BowlingGameKata/.vs/BowlingGameKata
+/BowlingGameKata/bin/Debug/netcoreapp2.2
+/BowlingGameKata/obj
+/BowlingGameKata.Tests/.vs/BowlingGameKata.Tests/v16
+/BowlingGameKata.Tests/bin/Debug/netcoreapp2.2
+/BowlingGameKata.Tests/obj
