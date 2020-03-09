@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.ComponentModel;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace BowlingGameKata
@@ -9,100 +8,24 @@ namespace BowlingGameKata
     {
         public BowlingGame()
         {
-            _currentFrame = new Frame(1);
-            _frames = new Dictionary<int, IFrame>();
-            _frames[_currentFrame.Round] = _currentFrame;
+            _frameManager = new FrameManager();
+            _scoreCalculator = new ScoreCalculator();
         }
 
-        public void Roll(int count)
+        public OperationResult Roll(int count)
         {
-            count.AssertIsPositive();
-            count.AssertIsLessOrEqual(MaxPinCount);
+            if (count < 0) return OperationResult.Failed("Roll count must be positive");
+            if (count > MaxPinCount) return OperationResult.Failed($"Roll count must be less than {MaxPinCount}");
 
-            _currentFrame.Roll(count);
-            _currentFrame = _currentFrame.ResolveNextFrame();
-            _frames[_currentFrame.Round] = _currentFrame;
+            var currentFrame = _frameManager.GetCurrentFrame();
+            currentFrame.Roll(count);
+            return OperationResult.Success();
         }
 
-        public int Score() => _frames.Values.Sum(frame => frame.Score);
-        
         public const int MaxPinCount = 10;
-        private IFrame _currentFrame;
-        private Dictionary<int, IFrame> _frames;
-    }
+        public int Score() => _scoreCalculator.CalculateScore(_frameManager);
 
-    internal class Frame : IFrame
-    {
-        public Frame(int round)
-        {
-            Round = round;
-            _score = new OpenScores(this);
-        }
-
-        public void Roll(int count) => _score = _score.Add(count);
-
-        public IFrame ResolveNextFrame()
-        {
-            if (!_score.IsReady()) return this;
-
-            NextFrame = new Frame(Round + 1);
-            return NextFrame;
-        }
-
-        public int Score => _score.Points;
-        public int Round { get; private set; }
-
-        public IFrame NextFrame { get; private set; } = new VoidFrame();
-        private IScore _score { get; set; }
-    }
-
-    public interface IFrame
-    {
-        void Roll(int count);
-        IFrame ResolveNextFrame();
-        int Score { get; }
-        int Round { get; }
-        IFrame NextFrame { get; }
-    }
-
-    public abstract class Score
-    {
-        public IScore Add(int score)
-        {
-            _rolls.Add(score);
-            return _rolls.Count() == 2 && Points == BowlingGame.MaxPinCount
-                ?  new SpareScores(Frame, _rolls)
-                : (IScore) this;
-        }
-
-        public virtual int Points => _rolls.Sum();
-        protected IFrame Frame { get; set; }
-        protected List<int> _rolls = new List<int>();
-    }
-
-    public class OpenScores : Score, IScore
-    {
-        public OpenScores(IFrame frame)
-        {
-            Frame = frame;
-        }
-
-        public bool IsReady() => _rolls.Count == 2;
-    }
-
-    public class SpareScores : Score, IScore
-    {
-        public SpareScores(IFrame frame, List<int> rolls)
-        {
-            Frame = frame;
-            _rolls = rolls;
-        }
-
-        public bool IsReady() => true;
-
-        public override int Points
-        {
-            get => _rolls.Sum() + Frame.NextFrame.Score;
-        }
+        private readonly FrameManager _frameManager;
+        private readonly ScoreCalculator _scoreCalculator;
     }
 }

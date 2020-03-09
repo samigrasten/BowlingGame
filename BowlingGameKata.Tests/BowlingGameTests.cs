@@ -20,8 +20,8 @@ namespace Tests
         }
 
         [Test]
-        [TestCase(new[] { 5, 5, 3 }, 16)]
-        [TestCase(new[] { 2, 10, 5 }, 17)]
+        [TestCase(new[] { 5, 2, 3 }, 10)]
+        [TestCase(new[] { 2, 4, 5 }, 11)]
         public void TotalScoreIsSumOfKnockedDownPins(int[] rolls, int expectedScore)
         {
             var sut = CreateSut();
@@ -30,12 +30,15 @@ namespace Tests
         }
 
         [Test]
-        [TestCase(-1)]
-        [TestCase(11)]
-        public void RolledDownPinsIsBetweenZeroAndTen(int amount)
+        [TestCase(-1, false)]
+        [TestCase(0, true)]
+        [TestCase(10, true)]
+        [TestCase(11, false)]
+        public void RolledDownPinsIsBetweenZeroAndTen(int amount, bool expectedResult)
         {
             var sut = CreateSut();
-            Assert.That(() => sut.Roll(amount), Throws.Exception);
+            var result = sut.Roll(amount);
+            Assert.That(result.IsSuccess, Is.EqualTo(expectedResult));
         }
 
         [Test]
